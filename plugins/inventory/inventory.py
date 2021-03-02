@@ -1,19 +1,25 @@
+
+__metaclass__ = type
+
 import json
 import re
 from sys import version as python_version
 
 from ansible.errors import AnsibleError
-from ansible.module_utils._text import to_native
-from ansible.module_utils._text import to_text
+from ansible.module_utils._text import to_native, to_text
 from ansible.module_utils.ansible_release import __version__ as ansible_version
 from ansible.module_utils.six.moves.urllib import error as urllib_error
 from ansible.module_utils.urls import open_url
-from ansible.plugins.inventory import BaseInventoryPlugin
-from ansible.plugins.inventory import Cacheable
+from ansible.plugins.inventory import BaseInventoryPlugin, Cacheable
 
 DOCUMENTATION = """
     name: inventory
     plugin_type: inventory
+    author:
+      - Alex Gittings (https://github.com/minitriga)
+    short_description: IPFabric inventory source
+    description:
+      - Get inventory from IPFabric
     extends_documentation_fragment:
       - inventory_cache
     options:
@@ -25,7 +31,7 @@ DOCUMENTATION = """
             description: Endpoint of the IPFabric API.
             required: True
             env:
-              - name: NAUTOBOT_API
+              - name: IPFABRIC_API
         validate_certs:
             description:
               - Allows connections when SSL certificates are not valid. Set to C(false) when certificates are not trusted.
@@ -109,7 +115,9 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
                 )
             except urllib_error.HTTPError as e:
                 # TODO
-                raise AnsibleError(to_native(e.fp.read()))
+                raise AnsibleError(
+                    to_native(e.fp.read()),
+                )  # pylint: disable=raise-missing-from
 
             try:
                 raw_data = to_text(
@@ -117,14 +125,17 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
                 )
 
             except UnicodeError:
-                raise AnsibleError(
+                raise AnsibleError(  # pylint: disable=raise-missing-from
                     'Incorrect encoding of fetched payload from IPFabric API.',
                 )
 
             try:
                 results = json.loads(raw_data)
             except ValueError:
-                raise AnsibleError('Incorrect JSON payload: %s' % raw_data)
+                raise AnsibleError(
+                    'Incorrect JSON payload: %s' %
+                    raw_data,
+                )  # pylint: disable=raise-missing-from
 
             if user_cache_setting:
                 self._cache[cache_key] = results
@@ -221,7 +232,7 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
                 raise AnsibleError(
                     'group_by option "%s" is not valid. (Maybe check the plurals option? It can determine what group_by options are valid)'  # noqa: E501
                     % group,
-                )
+                )  # pylint disable=raise-missing-from
 
             group_for_device = self.group_extractors[group](device)
 
@@ -259,7 +270,10 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
             self.add_device_to_groups(device=device, hostname=hostname)
 
     def parse(self, inventory, loader, path, cache=True):
-        super(InventoryModule, self).parse(inventory, loader, path)
+        super(InventoryModule, self).parse(
+            inventory, loader,
+            path,
+        )  # pylint: disable=super-with-arguments
 
         self._read_config_data(path=path)
         self.use_cache = cache
