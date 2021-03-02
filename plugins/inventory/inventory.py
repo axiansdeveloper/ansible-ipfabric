@@ -1,4 +1,3 @@
-
 __metaclass__ = type
 
 import json
@@ -77,14 +76,14 @@ DOCUMENTATION = """
 
 
 class InventoryModule(BaseInventoryPlugin, Cacheable):
-    NAME = 'axians.ipfabric.ipf_inventory'
+    NAME = "axians.ipfabric.ipf_inventory"
 
     def _fetch_information(self, url, data=None, method=None):
-        method = method or ('POST' if data else 'GET')
+        method = method or ("POST" if data else "GET")
         results = None
         cache_key = self.get_cache_key(url)
 
-        user_cache_setting = self.get_option('cache')
+        user_cache_setting = self.get_option("cache")
         attempt_to_read_cache = user_cache_setting and self.use_cache
 
         if attempt_to_read_cache:
@@ -102,7 +101,7 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
             need_to_fetch = True
 
         if need_to_fetch:
-            self.display.v('Fetching: ' + url)
+            self.display.v("Fetching: " + url)
 
             try:
                 response = open_url(
@@ -121,20 +120,20 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
 
             try:
                 raw_data = to_text(
-                    response.read(), errors='surrogate_or_strict',
+                    response.read(),
+                    errors="surrogate_or_strict",
                 )
 
             except UnicodeError:
                 raise AnsibleError(  # pylint: disable=raise-missing-from
-                    'Incorrect encoding of fetched payload from IPFabric API.',
+                    "Incorrect encoding of fetched payload from IPFabric API.",
                 )
 
             try:
                 results = json.loads(raw_data)
             except ValueError:
                 raise AnsibleError(
-                    'Incorrect JSON payload: %s' %
-                    raw_data,
+                    "Incorrect JSON payload: %s" % raw_data,
                 )  # pylint: disable=raise-missing-from
 
             if user_cache_setting:
@@ -143,36 +142,36 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
             return results
 
     def fetch_api_info(self):
-        version = self._fetch_information(self.api_endpoint + '/os/version')
-        self.version = version['version']
+        version = self._fetch_information(self.api_endpoint + "/os/version")
+        self.version = version["version"]
 
     def fetch_devices(self):
         self.devices_list = []
         payload = {
-            'columns': [
-                'loginIp',
-                'family',
-                'hostname',
-                'platform',
-                'loginType',
-                'sn',
-                'siteName',
-                'vendor',
-                'version',
+            "columns": [
+                "loginIp",
+                "family",
+                "hostname",
+                "platform",
+                "loginType",
+                "sn",
+                "siteName",
+                "vendor",
+                "version",
             ],
-            'snapshot': self.snapshot,
+            "snapshot": self.snapshot,
         }
         self.devices_list = self._fetch_information(
-            self.api_endpoint + '/tables/inventory/devices',
+            self.api_endpoint + "/tables/inventory/devices",
             data=json.dumps(payload),
-        )['data']
+        )["data"]
         return self.devices_list
 
     def _pluralize_group_by(self, group_by):
         mapping = {
-            'platform': 'platforms',
-            'vendor': 'vendors',
-            'site': 'sites',
+            "platform": "platforms",
+            "vendor": "vendors",
+            "site": "sites",
         }
 
         if self.plurals:
@@ -182,34 +181,34 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
             return group_by
 
     def extract_ip(self, device):
-        return device.get('loginIp')
+        return device.get("loginIp")
 
     def extract_platform(self, device):
-        return self.slugify(device.get('platform'))
+        return self.slugify(device.get("platform"))
 
     def slugify(self, name):
-        removed_chars = re.sub(r'[^\-\.\w\s]', '', name)
-        convert_chars = re.sub(r'[\-\.\s]+', '_', removed_chars)
+        removed_chars = re.sub(r"[^\-\.\w\s]", "", name)
+        convert_chars = re.sub(r"[\-\.\s]+", "_", removed_chars)
 
         return convert_chars.strip().lower()
 
     def extract_site(self, device):
-        return self.slugify(device.get('siteName'))
+        return self.slugify(device.get("siteName"))
 
     def extract_family(self, device):
-        return self.slugify(device.get('family'))
+        return self.slugify(device.get("family"))
 
     def extract_vendor(self, device):
-        return self.slugify(device.get('vendor'))
+        return self.slugify(device.get("vendor"))
 
     @property
     def group_extractors(self):
         extractors = {
-            'loginIp': self.extract_ip,
-            self._pluralize_group_by('platform'): self.extract_platform,
-            self._pluralize_group_by('site'): self.extract_site,
-            self._pluralize_group_by('vendor'): self.extract_vendor,
-            'family': self.extract_family,
+            "loginIp": self.extract_ip,
+            self._pluralize_group_by("platform"): self.extract_platform,
+            self._pluralize_group_by("site"): self.extract_site,
+            self._pluralize_group_by("vendor"): self.extract_vendor,
+            "family": self.extract_family,
         }
 
         return extractors
@@ -224,7 +223,7 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
         if self.group_names_raw:
             return group
         else:
-            return '_'.join([group, group_for_host])
+            return "_".join([group, group_for_host])
 
     def add_device_to_groups(self, device, hostname):
         for group in self.group_by:
@@ -252,7 +251,8 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
                     group=group_name,
                 )
                 self.inventory.add_host(
-                    group=transformed_group_name, host=hostname,
+                    group=transformed_group_name,
+                    host=hostname,
                 )
 
     def main(self):
@@ -262,38 +262,41 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
 
         for device in self.devices_list:
             print(device)
-            hostname = device['hostname']
+            hostname = device["hostname"]
             self.inventory.add_host(hostname)
             self.inventory.set_variable(
-                hostname, 'ansible_host', device['loginIp'],
+                hostname,
+                "ansible_host",
+                device["loginIp"],
             )
             self.add_device_to_groups(device=device, hostname=hostname)
 
     def parse(self, inventory, loader, path, cache=True):
         super(InventoryModule, self).parse(
-            inventory, loader,
+            inventory,
+            loader,
             path,
         )  # pylint: disable=super-with-arguments
 
         self._read_config_data(path=path)
         self.use_cache = cache
 
-        token = self.get_option('token')
-        self.api_endpoint = self.get_option('api_endpoint').strip('/')
-        self.timeout = self.get_option('timeout')
-        self.validate_certs = self.get_option('validate_certs')
-        self.snapshot = self.get_option('snapshot')
-        self.group_by = self.get_option('group_by')
-        self.group_names_raw = self.get_option('group_names_raw')
-        self.plurals = self.get_option('plurals')
+        token = self.get_option("token")
+        self.api_endpoint = self.get_option("api_endpoint").strip("/")
+        self.timeout = self.get_option("timeout")
+        self.validate_certs = self.get_option("validate_certs")
+        self.snapshot = self.get_option("snapshot")
+        self.group_by = self.get_option("group_by")
+        self.group_names_raw = self.get_option("group_names_raw")
+        self.plurals = self.get_option("plurals")
 
         self.headers = {
-            'User-Agent': 'ansible %s Python %s'
-            % (ansible_version, python_version.split(' ')[0]),
-            'Content-Type': 'application/json',
+            "User-Agent": "ansible %s Python %s"
+            % (ansible_version, python_version.split(" ")[0]),
+            "Content-Type": "application/json",
         }
 
         if token:
-            self.headers.update({'X-API-Token': token})
+            self.headers.update({"X-API-Token": token})
 
         self.main()
