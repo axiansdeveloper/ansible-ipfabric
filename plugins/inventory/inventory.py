@@ -116,7 +116,7 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
                 # TODO
                 raise AnsibleError(
                     to_native(e.fp.read()),
-                )  # pylint: disable=raise-missing-from
+                )
 
             try:
                 raw_data = to_text(
@@ -125,7 +125,7 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
                 )
 
             except UnicodeError:
-                raise AnsibleError(  # pylint: disable=raise-missing-from
+                raise AnsibleError(
                     "Incorrect encoding of fetched payload from IPFabric API.",
                 )
 
@@ -134,7 +134,7 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
             except ValueError:
                 raise AnsibleError(
                     "Incorrect JSON payload: %s" % raw_data,
-                )  # pylint: disable=raise-missing-from
+                )
 
             if user_cache_setting:
                 self._cache[cache_key] = results
@@ -276,7 +276,7 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
             inventory,
             loader,
             path,
-        )  # pylint: disable=super-with-arguments
+        )
 
         self._read_config_data(path=path)
         self.use_cache = cache
