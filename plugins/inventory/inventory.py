@@ -28,7 +28,7 @@ DOCUMENTATION = """
         plugin:
             description: token that ensures this is a source file for the 'ipfabric' plugin.
             required: True
-            choices: ['axians.ipfabric.inventory']
+            choices: ['axiansdeveloper.ipfabric.inventory']
         api_endpoint:
             description: Endpoint of the IPFabric API.
             required: True
@@ -64,6 +64,7 @@ DOCUMENTATION = """
               - sites
               - vendor
               - vendors
+            default: []
         group_names_raw:
             description: Will not add the group_by choice name to the group names
             default: False
@@ -264,7 +265,6 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
         self.fetch_devices()
 
         for device in self.devices_list:
-            print(device)
             hostname = device["hostname"]
             self.inventory.add_host(hostname)
             self.inventory.set_variable(
