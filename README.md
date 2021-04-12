@@ -5,10 +5,7 @@
 
 [IPFabric](https://ipfabric.io/) inventory for [Ansible](https://github.com/ansible/ansible).
 
-> This collection is currently heavily inspired by the [Netbox Asnible Modules](https://github.com/netbox-community/ansible_modules) collection.
-
-> Note this is collection is currently Alpha.
-
+> This collection is currently heavily inspired by the great work over at the [Netbox Ansible](https://github.com/netbox-community/ansible_modules) collection.
 
 ## Requirements
 The axiansdeveloper.ipfabric collection only supports IPFabric versions of 3.7 and greater due to support for [API tokens](https://ipfabric.atlassian.net/wiki/spaces/ND/pages/1448575064/API+tokens).
