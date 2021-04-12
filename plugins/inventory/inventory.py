@@ -272,6 +272,11 @@ class InventoryModule(BaseInventoryPlugin, Cacheable):
                 "ansible_host",
                 device["loginIp"],
             )
+            self.inventory.set_variable(
+                hostname,
+                "family",
+                device["family"],
+            )
             self.add_device_to_groups(device=device, hostname=hostname)
 
     def parse(self, inventory, loader, path, cache=True):
