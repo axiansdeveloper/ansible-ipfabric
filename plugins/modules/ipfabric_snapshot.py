@@ -66,7 +66,7 @@ EXAMPLES = r"""
         ipfabric_url: https://ipfabric.local
         ipfabric_token: thisIsMyToken
         state: present
-"""  # noqa: E501
+"""
 
 RETURN = r"""
 msg:
