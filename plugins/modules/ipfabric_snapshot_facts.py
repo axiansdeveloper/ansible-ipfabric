@@ -2,7 +2,6 @@
 
 from __future__ import absolute_import, division, print_function
 import json
-from ansible.module_utils._text import to_text
 from ansible.module_utils.six.moves.urllib import error as urllib_error
 from ansible.module_utils.urls import open_url
 from ansible.module_utils.basic import AnsibleModule
@@ -16,13 +15,13 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
-module: ipfabric_snapshot
+module: ipfabric_snapshot_facts
 
-short_description: Create, Update or Delete Snapshots within IPFabric
+short_description: Gather Information about Snapshots within IPFabric
 
 version_added: "0.0.2"
 
-description: Create, Update or Delete Snapshots within IPFabric
+description: Gather Information about Snapshots within IPFabric
 
 options:
     ipfabric_url:
@@ -62,10 +61,9 @@ EXAMPLES = r"""
 
   tasks:
     - name: Create a New Ipfabric Snapshot
-      ipfabric_snapshot:
+      ipfabric_snapshot_facts:
         ipfabric_url: https://ipfabric.local
         ipfabric_token: thisIsMyToken
-        state: present
 """
 
 RETURN = r"""
@@ -109,7 +107,7 @@ def _does_snapshot_exist(module, headers):
     snapshots = _get_snapshots(module, headers)
     for snapshot in snapshots:
         if module.params["data"]["snapshot_id"] == snapshot["id"]:
-            return True
+            return snapshot
     return False
 
 
@@ -127,63 +125,30 @@ def main():
         ),
     )
 
-    required_if = [("state", "absent", ["data"])]
-
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
-        required_if=required_if,
     )
 
     result = dict(changed=False, msg="")
 
     headers = {"X-API-Token": module.params["ipfabric_token"]}
-    url = module.params["ipfabric_url"] + "/api/v1/snapshots"
-    if module.params["state"] == "present":
-        response = request(
-            headers=headers,
-            url=url,
-            validate_certs=module.params["validate_certs"],
-            method="POST",
-            module=module,
-        )
 
-        response_json = json.loads(response.read())
+    snapshots = _get_snapshots(module=module, headers=headers)
 
-        if response.status == 200 and response_json["success"]:
-            snapshots = _get_snapshots(module=module, headers=headers)
-
+    if module.params["data"]:
+        snapshot = _does_snapshot_exist(module=module, headers=headers)
+        if snapshot:
             result[
                 "msg"
-            ] = f"Successfully kicked off a snapshot discovery ID: {snapshots[0]['id']}"  # noqa: E501
-            result["info"] = snapshots[0]
-            result["changed"] = True
+            ] = f"Snapshot {module.params['data']['snapshot_id']} Retrieval Successful"  # noqa: E501
+            result["info"] = snapshot
         else:
-            module.fail_json(msg=to_text(response.read()))
-
-    elif module.params["state"] == "absent":
-        if module.params["data"]:
-            if _does_snapshot_exist(module, headers):
-
-                url += f"/{module.params['data']['snapshot_id']}"
-                response = request(
-                    headers=headers,
-                    url=url,
-                    validate_certs=module.params["validate_certs"],
-                    method="DELETE",
-                    module=module,
-                )
-                if response.status == 204:
-                    result[
-                        "msg"
-                    ] = f"Snapshot {module.params['data']['snapshot_id']} has been successfully deleted."  # noqa: E501
-                    result["changed"] = True
-            else:
-                result[
-                    "msg"
-                ] = f"Snapshot {module.params['data']['snapshot_id']} does not exist."  # noqa: E501
-        else:
-            module.fail_json(msg="snapshot_id not set")
+            module.fail_json(msg="Snapshot does not exist")
+    else:
+        snapshots = _get_snapshots(module=module, headers=headers)
+        result["msg"] = "Snapshot Retrieval Successful"
+        result["info"] = snapshots
 
     module.exit_json(**result)
 
