@@ -25,15 +25,30 @@ version_added: "0.0.2"
 description: Create, Update or Delete Snapshots within IPFabric
 
 options:
+    ipfabric_url:
+      description:
+        - URL of the IPFabric instance resolvable by the Ansible consol host
+      required: true
+      type: str
+    ipfabric_token:
+      description:
+        - The token created within IPFabric to Authorize API access (must have snapshot permissions)  # noqa: E501
+      required: true
+      type: str
+    validate_certs:
+      description:
+        - IF C(no), SSL certificates will not be calidated. This should only be used on personally controlles sites using self-signed certificates.  # noqa: E501
+      default: true
+      type: raw
     data:
-        description: This is the message to send to the test module.
-        required: true
-        type: dict
-        suboptions:
-            id:
-                description: Snapshot ID
-                required: False
-                type: str
+      description: This is the message to send to the test module.
+      required: true
+      type: dict
+      suboptions:
+        id:
+          description: Snapshot ID
+          required: False
+          type: str
 
 author:
     - Alex Gittings (@minitriga)
@@ -51,7 +66,7 @@ EXAMPLES = r"""
         ipfabric_url: https://ipfabric.local
         ipfabric_token: thisIsMyToken
         state: present
-"""
+"""  # noqa: E501
 
 RETURN = r"""
 msg:
@@ -109,7 +124,6 @@ def main():
                     snapshot_id=dict(required=True, type="str"),
                 ),
             ),
-            snapshot_id=dict(required=False, type="str"),
         ),
     )
 
