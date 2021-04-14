@@ -9,7 +9,7 @@ from ansible.module_utils.basic import AnsibleModule
 from copy import deepcopy
 from ansible_collections.axiansdeveloper.ipfabric.plugins.module_utils.ipfabric_utils import (  # noqa: E501
     IPFABRIC_ARG_SPEC,
-)  # noqa: E501
+)
 
 
 __metaclass__ = type
