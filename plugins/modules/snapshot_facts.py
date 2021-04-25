@@ -55,8 +55,6 @@ data:
   type: list
 """
 
-# def _return_snapshot(snapshots, snapshot_id):
-
 
 def main():
 
