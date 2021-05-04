@@ -1,6 +1,9 @@
 from ansible.module_utils.urls import Request
-from ansible.module_utils.six.moves.urllib.error import HTTPError, URLError
-from .errors import IPFabricError, AuthError, UnexpectedAPIResponse
+from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.six.moves.urllib.error import URLError
+from .errors import IPFabricError
+from .errors import AuthError
+from .errors import UnexpectedAPIResponse
 import json
 import time
 
