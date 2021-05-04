@@ -78,12 +78,8 @@ def main():
         )
         if snapshots:
             result["data"] = snapshots
-            module.exit_json(**result)
-        module.fail_json(
-            msg="Failed to find snapshot with id: {0}".format(
-                module.params["snapshot_id"],
-            ),
-        )
+            result["msg"] = "Snapshot Located"
+        module.exit_json(**result)
     except errors.IPFabricError as e:
         module.fail_json(msg=str(e))
 

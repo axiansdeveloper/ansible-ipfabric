@@ -2,6 +2,7 @@ from ansible.module_utils.urls import Request
 from ansible.module_utils.six.moves.urllib.error import HTTPError, URLError
 from .errors import IPFabricError, AuthError, UnexpectedAPIResponse
 import json
+import time
 
 
 class Response:
@@ -105,3 +106,22 @@ class Client:
                 return single_snapshot
             return resp.json
         raise UnexpectedAPIResponse(resp.status, resp.data)
+
+    def create_snapshot(self, snapshot_id=None):
+        resp = self.request("POST", "snapshots")
+        if resp.status == 200 and resp.json["success"]:
+            time.sleep(1)
+            iterations = 0
+            snapshot = self.get_snapshots()[0]
+            while snapshot["state"] != "discovering" and iterations >= 10:
+                snapshot = self.get_snapshots()[0]["state"]
+                iterations += 1
+            return snapshot
+        return None
+
+    def delete_snapshot(self, snapshot_id):
+        if self.get_snapshots(snapshot_id=snapshot_id):
+            resp = self.request("DELETE", "snapshots/{}".format(snapshot_id))
+            if resp.status == 204:
+                return True
+            return False
