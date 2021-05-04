@@ -110,8 +110,14 @@ class Client:
             return resp.json
         raise UnexpectedAPIResponse(resp.status, resp.data)
 
-    def create_snapshot(self, snapshot_id=None):
-        resp = self.request("POST", "snapshots")
+    def create_snapshot(self, snapshot_id=None, devices=None):
+        if snapshot_id and devices:
+            data = {"snList": devices}
+            url = "snapshots/{0}/devices".format(snapshot_id)
+            resp = self.request("POST", url, data=data)
+        else:
+            resp = self.request("POST", "snapshots")
+
         if resp.status == 200 and resp.json["success"]:
             time.sleep(1)
             iterations = 0

@@ -56,6 +56,7 @@ EXAMPLES = r"""
 def ensure_present(module, client):
     resp = client.create_snapshot(
         snapshot_id=module.params["snapshot_id"],
+        devices=module.params["devices"],
     )
     if resp:
         msg = "Successfully initiated snapshot: {0}.".format(resp["id"])
