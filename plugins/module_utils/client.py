@@ -66,6 +66,14 @@ class Client:
                         e.reason,
                     ),
                 )
+            elif e.code == 403:
+                raise AuthError(
+                    "Insufficient API Rights Check Permissions: "
+                    "{0} {1}".format(
+                        e.code,
+                        e.reason,
+                    ),
+                )
             return Response(e.code, e.read(), e.headers)
         except URLError as e:
             raise IPFabricError(e.reason)
@@ -110,11 +118,31 @@ class Client:
             return resp.json
         raise UnexpectedAPIResponse(resp.status, resp.data)
 
-    def create_snapshot(self, snapshot_id=None, devices=None):
+    def rediscover_existing_snapshot(
+        self,
+        snapshot_id,
+        devices,
+    ):
+        data = {"snList": devices}
+        url = "snapshots/{0}/devices".format(snapshot_id)
+        resp = self.request("POST", url, data=data)
+        return resp
+
+    def rediscover_new_snapshot(self, ips):
+        data = {
+            "networks": {
+                "include": ["{0}/32".format(ip) for ip in ips],
+            },
+            "seedList": ips,
+        }
+        resp = self.request("POST", "snapshots", data=data)
+        return resp
+
+    def create_snapshot(self, snapshot_id=None, devices=None, ips=None):
         if snapshot_id and devices:
-            data = {"snList": devices}
-            url = "snapshots/{0}/devices".format(snapshot_id)
-            resp = self.request("POST", url, data=data)
+            resp = self.rediscover_snapshot(snapshot_id, devices)
+        elif ips:
+            resp = self.rediscover_new_snapshot(ips)
         else:
             resp = self.request("POST", "snapshots")
 
@@ -126,11 +154,20 @@ class Client:
                 snapshot = self.get_snapshots()[0]["state"]
                 iterations += 1
             return snapshot
-        return None
+
+        raise IPFabricError("Failed to create snapshot.")
 
     def delete_snapshot(self, snapshot_id):
         if self.get_snapshots(snapshot_id=snapshot_id):
-            resp = self.request("DELETE", "snapshots/{}".format(snapshot_id))
+            resp = self.request("DELETE", "snapshots/{0}".format(snapshot_id))
             if resp.status == 204:
                 return True
-            return False
+            raise IPFabricError("Snapshot failed to delete.")
+
+    def snapshot_load(self, snapshot_id, state):
+        if self.get_snapshots(snapshot_id):
+            url = "snapshots/{0}/{1}".format(snapshot_id, state)
+            resp = self.request("POST", url)
+            if resp.status == 204:
+                return resp
+            raise IPFabricError("Snapshot failed to {0}.".format(state))
