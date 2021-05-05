@@ -102,6 +102,17 @@ EXAMPLES = r"""
       snapshot_id: 91da47aa-4843-4562-a86f-acc0012d63fd
 """
 
+RETURN = r"""
+msg:
+  description: Message indicating failure or info about what has happened.
+  returned: always
+  type: str
+data:
+  description: Data returned from the module.
+  returned: always
+  type: list
+"""
+
 
 def ensure_present(module, client):
     resp = client.create_snapshot(

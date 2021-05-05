@@ -39,3 +39,35 @@ token: 1234567890abcdefghijklmnop
 group_by:
   - sites
 ```
+
+## Modules
+Modules can be used to interact with IPFabric. There are currently two modules that allow for interaction:
+- *snapshot_facts* - returns information about snapshots
+- *snapshot* - Create, delete and manipulate snapshots in IPFabric
+
+```yaml
+- name: "Test IPFabric modules"
+  connection: local
+  hosts: localhost
+  gather_facts: False
+
+  tasks:
+    - name: Create a New Ipfabric Snapshot
+      axiansdeveloper.ipfabric.snapshot_facts:
+        ipfabric:
+          host: https://192.168.3.1
+          token: 1234567890abcdefghijklmnop
+          validate_certs: false
+      register: snapshot
+
+    - name: debug
+      debug:
+        var: result
+
+    - name: Create a New Ipfabric Snapshot
+      axiansdeveloper.ipfabric.snapshot:
+        ipfabric:
+          host: https://192.168.3.1
+          token: 1234567890abcdefghijklmnop
+          validate_certs: false
+```
